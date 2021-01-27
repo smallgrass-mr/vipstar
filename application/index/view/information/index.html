@@ -1,0 +1,113 @@
+<style>
+    .basicinfo {
+        margin: 15px 0;
+    }
+
+    .basicinfo .row > .col-xs-4 {
+        padding-right: 0;
+    }
+
+    .basicinfo .row > div {
+        margin: 5px 0;
+    }
+</style>
+<div id="content-container" class="container">
+    <div class="row">
+
+        <!--<div class="col-md-3">-->
+            <!--{include file="common/sidenav" /}-->
+        <!--</div>-->
+        <div class="col-md-9">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2 class="page-header">
+                        信息列表
+                        <!--<a href="{:url('user/profile')}" class="btn btn-success pull-right"><i class="fa fa-pencil"></i>-->
+                            <!--{:__('Profile')}</a>-->
+                    </h2>
+                    <form name="form" action="{:url('index/information/index')}" id="search" class="form-inline margin-bottom" method="GET"  >
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="search"  placeholder="标题">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit">搜索</button>
+                            </span>
+                        </div>
+                    </form>
+                    {volist name="list.data" id="vo"}
+                    <div class="row user-baseinfo" >
+                            <div class="col-md-3 col-sm-3 col-xs-2 text-center user-center">
+                                <span class="avatar-img">
+                                        <img src="{$vo.image|cdnurl}" alt="">
+                                </span>
+                            </div>
+                            <div class="col-md-9 col-sm-9 col-xs-10">
+                                <!-- Content -->
+                                <div class="ui-content">
+                                    <!-- Heading -->
+                                    <h4>{$vo.nickname}</h4>
+                                    <!-- Paragraph -->
+                                    <p>
+                                            {$vo.title|default=''}
+                                    </p>
+                                    <!-- Success -->
+                                </div>
+                            </div>
+
+                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                <!-- Content -->
+                                <div class="ui-content">
+                                    <div class="basicinfo">
+                                        <div class="row">
+                                            <div class="col-xs-4 col-md-2">{:__('Money')}</div>
+                                            <div class="col-xs-8 col-md-4">
+                                                <a href="javascript:;" class="viewmoney">{$user.money}</a>
+                                            </div>
+                                            <div class="col-xs-4 col-md-2">{:__('Score')}</div>
+                                            <div class="col-xs-8 col-md-4">
+                                                <a href="javascript:;" class="viewscore">{$user.score}</a>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-4 col-md-2">{:__('Successions')}</div>
+                                            <div class="col-xs-8 col-md-4">{$user.successions} {:__('Day')}</div>
+                                            <div class="col-xs-4 col-md-2">{:__('Maxsuccessions')}</div>
+                                            <div class="col-xs-8 col-md-4">{$user.maxsuccessions} {:__('Day')}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-xs-4 col-md-2">{:__('Logintime')}</div>
+                                            <div class="col-xs-8 col-md-4">{$user.logintime|date="Y-m-d H:i:s",###}</div>
+                                            <div class="col-xs-4 col-md-2">{:__('Prevtime')}</div>
+                                            <div class="col-xs-8 col-md-4">{$user.prevtime|date="Y-m-d H:i:s",###}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    {/volist}
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            <li>
+                                <a href="{:url('index/information/index')}?limit={$list.per_page}&page=1" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {for start="1" end="$list.last_page+1"}
+                                <li><a href="{:url('index/information/index')}?limit={$list.per_page}&page={$i}">{$i}</a></li>
+                            {/for}
+                            <li>
+                                <a href="#" aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+
+</script>
