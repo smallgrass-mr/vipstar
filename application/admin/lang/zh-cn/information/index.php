@@ -17,6 +17,7 @@ return [
     'Switch 0'     => '禁用',
     'Switch 1'     => '正常',
     'Sort'         => '排序',
+    'Wechat'       => '微信',
     'Update_time'  => '更新时间(datetime)',
     'Create_time'  => '创建时间(datetime)'
 ];

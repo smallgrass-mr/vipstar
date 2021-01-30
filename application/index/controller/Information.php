@@ -7,6 +7,7 @@ use app\common\controller\Frontend;
 use app\common\library\Ems;
 use app\common\library\Sms;
 use app\common\model\Attachment;
+use app\common\model\InformationType;
 use think\Config;
 use think\Cookie;
 use think\Hook;
@@ -19,7 +20,7 @@ use think\Validate;
 class Information extends Frontend
 {
     protected $layout = 'default';
-    protected $noNeedLogin = ['login', 'register', 'third'];
+    protected $noNeedLogin = ['login', 'register', 'third','index'];
     protected $noNeedRight = ['*'];
 
     public function _initialize()
@@ -58,10 +59,14 @@ class Information extends Frontend
     {
         $limit = $this->request->request('limit', '');
         $search = $this->request->request('search', '');
+        $type = $this->request->request('type', '');
         $limit = !empty($limit) ? $limit:10;
         $where['switch']=['=',1];
         if(!empty($search)){
             $where['title'] = ['like','%'.$search.'%'];
+        }
+        if(!empty($type)){
+            $where['category_id'] = ['=',$type];
         }
         $list = \app\common\model\Information::getPageList('*',$where,'sort desc',$limit);
         if(!$list->isEmpty()){
@@ -69,258 +74,68 @@ class Information extends Frontend
                 $list[$key]['nickname'] = \app\admin\model\User::getValue('nickname',['id'=>$value['user_id']]);
             }
         }
-        // dump($list->toArray());die;
+        $typedata = InformationType::getAll('*',['switch'=>1]);
+        $this->assign('typedata',$typedata);
         $this->assign('list',$list->toArray());
        return $this->view->fetch();
     }
 
     /**
-     * 注册会员
+     * 详情
      */
-    public function register()
+    public function  info()
     {
-        $url = $this->request->request('url', '');
-        if ($this->auth->id) {
-            $this->success(__('You\'ve logged in, do not login again'), $url ? $url : url('user/index'));
+        $id = $limit = $this->request->request('id', '');
+        $info = \app\common\model\Information::getOne('*',['id'=>$id])->toArray();
+        if(!empty($info)){
+            $info['nickname'] = \app\admin\model\User::getValue('nickname',['id'=>$info['user_id']]);
         }
-        if ($this->request->isPost()) {
-            $username = $this->request->post('username');
-            $password = $this->request->post('password');
-            $email = $this->request->post('email');
-            $mobile = $this->request->post('mobile', '');
-            $captcha = $this->request->post('captcha');
-            $token = $this->request->post('__token__');
-            $rule = [
-                'username'  => 'require|length:3,30',
-                'password'  => 'require|length:6,30',
-                'email'     => 'require|email',
-                'mobile'    => 'regex:/^1\d{10}$/',
-                '__token__' => 'require|token',
-            ];
+        $this->assign('info',$info);
+        return $this->view->fetch();
+    }
 
-            $msg = [
-                'username.require' => 'Username can not be empty',
-                'username.length'  => 'Username must be 3 to 30 characters',
-                'password.require' => 'Password can not be empty',
-                'password.length'  => 'Password must be 6 to 30 characters',
-                'email'            => 'Email is incorrect',
-                'mobile'           => 'Mobile is incorrect',
-            ];
-            $data = [
-                'username'  => $username,
-                'password'  => $password,
-                'email'     => $email,
-                'mobile'    => $mobile,
-                '__token__' => $token,
-            ];
-            //验证码
-            $captchaResult = true;
-            $captchaType = config("fastadmin.user_register_captcha");
-            if ($captchaType) {
-                if ($captchaType == 'mobile') {
-                    $captchaResult = Sms::check($mobile, $captcha, 'register');
-                } elseif ($captchaType == 'email') {
-                    $captchaResult = Ems::check($email, $captcha, 'register');
-                } elseif ($captchaType == 'wechat') {
-                    $captchaResult = WechatCaptcha::check($captcha, 'register');
-                } elseif ($captchaType == 'text') {
-                    $captchaResult = \think\Validate::is($captcha, 'captcha');
-                }
+    /**
+     * 上传共享资料
+     */
+    public function share()
+    {
+        if($this->request->isPost()){
+            $data = $this->request->post();
+            if (empty($data['type'])) {
+                $this->error('请选择分类！');
             }
-            if (!$captchaResult) {
-                $this->error(__('Captcha is incorrect'));
+            if (empty($data['title'])) {
+                $this->error('标题不能为空！');
             }
-            $validate = new Validate($rule, $msg);
-            $result = $validate->check($data);
-            if (!$result) {
-                $this->error(__($validate->getError()), null, ['token' => $this->request->token()]);
+            if(empty($data['wechat']) && empty($data['qq'] && empty($data['email']) && empty($data['phone'])) ){
+                $this->error('联系方式不能为空！');
             }
-            if ($this->auth->register($username, $password, $email, $mobile)) {
-                $this->success(__('Sign up successful'), $url ? $url : url('user/index'));
+            if(empty($data['price'])){
+                $this->error('价格不能为空！');
+            }
+            $user =  $this->auth->getUser()->toArray() ;
+            $create['user_id'] = $user['id'];
+            $create['title'] = $data['title'];
+            $create['category_id'] = $data['type'];
+            $create['wechat'] = $data['wechat'];
+            $create['price'] = $data['price'];
+            $create['content'] = $data['content'];
+            $create['qq'] = $data['qq'];
+            $create['email'] = $data['email'];
+            $create['switch'] = 1;
+            $create['update_time'] = date('Y-m-d H:i:s',time());
+            $create['create_time'] = date('Y-m-d H:i:s',time());
+            $res = \app\common\model\Information::create($create);
+                $this->success('发布成功', 'index');
+            if (!empty($res)) {
+
             } else {
-                $this->error($this->auth->getError(), null, ['token' => $this->request->token()]);
+                $this->error($this->auth->getError());
             }
         }
-        //判断来源
-        $referer = $this->request->server('HTTP_REFERER');
-        if (!$url && (strtolower(parse_url($referer, PHP_URL_HOST)) == strtolower($this->request->host()))
-            && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
-            $url = $referer;
-        }
-        $this->view->assign('captchaType', config('fastadmin.user_register_captcha'));
-        $this->view->assign('url', $url);
-        $this->view->assign('title', __('Register'));
+        $typedata = InformationType::getAll('*',['switch'=>1],'sort desc');
+        $this->assign('typedata',$typedata);
         return $this->view->fetch();
     }
 
-    /**
-     * 会员登录
-     */
-    public function login()
-    {
-        $url = $this->request->request('url', '');
-        if ($this->auth->id) {
-            $this->success(__('You\'ve logged in, do not login again'), $url ? $url : url('user/index'));
-        }
-        if ($this->request->isPost()) {
-            $account = $this->request->post('account');
-            $password = $this->request->post('password');
-            $keeplogin = (int)$this->request->post('keeplogin');
-            $token = $this->request->post('__token__');
-            $rule = [
-                'account'   => 'require|length:3,50',
-                'password'  => 'require|length:6,30',
-                '__token__' => 'require|token',
-            ];
-
-            $msg = [
-                'account.require'  => 'Account can not be empty',
-                'account.length'   => 'Account must be 3 to 50 characters',
-                'password.require' => 'Password can not be empty',
-                'password.length'  => 'Password must be 6 to 30 characters',
-            ];
-            $data = [
-                'account'   => $account,
-                'password'  => $password,
-                '__token__' => $token,
-            ];
-            $validate = new Validate($rule, $msg);
-            $result = $validate->check($data);
-            if (!$result) {
-                $this->error(__($validate->getError()), null, ['token' => $this->request->token()]);
-                return false;
-            }
-            if ($this->auth->login($account, $password)) {
-                $this->success(__('Logged in successful'), $url ? $url : url('user/index'));
-            } else {
-                $this->error($this->auth->getError(), null, ['token' => $this->request->token()]);
-            }
-        }
-        //判断来源
-        $referer = $this->request->server('HTTP_REFERER');
-        if (!$url && (strtolower(parse_url($referer, PHP_URL_HOST)) == strtolower($this->request->host()))
-            && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
-            $url = $referer;
-        }
-        $this->view->assign('url', $url);
-        $this->view->assign('title', __('Login'));
-        return $this->view->fetch();
-    }
-
-    /**
-     * 退出登录
-     */
-    public function logout()
-    {
-        //退出本站
-        $this->auth->logout();
-        $this->success(__('Logout successful'), url('user/index'));
-    }
-
-    /**
-     * 个人信息
-     */
-    public function profile()
-    {
-        $this->view->assign('title', __('Profile'));
-        return $this->view->fetch();
-    }
-
-    /**
-     * 修改密码
-     */
-    public function changepwd()
-    {
-        if ($this->request->isPost()) {
-            $oldpassword = $this->request->post("oldpassword");
-            $newpassword = $this->request->post("newpassword");
-            $renewpassword = $this->request->post("renewpassword");
-            $token = $this->request->post('__token__');
-            $rule = [
-                'oldpassword'   => 'require|length:6,30',
-                'newpassword'   => 'require|length:6,30',
-                'renewpassword' => 'require|length:6,30|confirm:newpassword',
-                '__token__'     => 'token',
-            ];
-
-            $msg = [
-                'renewpassword.confirm' => __('Password and confirm password don\'t match')
-            ];
-            $data = [
-                'oldpassword'   => $oldpassword,
-                'newpassword'   => $newpassword,
-                'renewpassword' => $renewpassword,
-                '__token__'     => $token,
-            ];
-            $field = [
-                'oldpassword'   => __('Old password'),
-                'newpassword'   => __('New password'),
-                'renewpassword' => __('Renew password')
-            ];
-            $validate = new Validate($rule, $msg, $field);
-            $result = $validate->check($data);
-            if (!$result) {
-                $this->error(__($validate->getError()), null, ['token' => $this->request->token()]);
-                return false;
-            }
-
-            $ret = $this->auth->changepwd($newpassword, $oldpassword);
-            if ($ret) {
-                $this->success(__('Reset password successful'), url('user/login'));
-            } else {
-                $this->error($this->auth->getError(), null, ['token' => $this->request->token()]);
-            }
-        }
-        $this->view->assign('title', __('Change password'));
-        return $this->view->fetch();
-    }
-
-    public function attachment()
-    {
-        //设置过滤方法
-        $this->request->filter(['strip_tags']);
-        if ($this->request->isAjax()) {
-            $mimetypeQuery = [];
-            $filter = $this->request->request('filter');
-            $filterArr = (array)json_decode($filter, true);
-            if (isset($filterArr['mimetype']) && preg_match("/[]\,|\*]/", $filterArr['mimetype'])) {
-                $this->request->get(['filter' => json_encode(array_diff_key($filterArr, ['mimetype' => '']))]);
-                $mimetypeQuery = function ($query) use ($filterArr) {
-                    $mimetypeArr = explode(',', $filterArr['mimetype']);
-                    foreach ($mimetypeArr as $index => $item) {
-                        if (stripos($item, "/*") !== false) {
-                            $query->whereOr('mimetype', 'like', str_replace("/*", "/", $item) . '%');
-                        } else {
-                            $query->whereOr('mimetype', 'like', '%' . $item . '%');
-                        }
-                    }
-                };
-            }
-            $model = new Attachment();
-            $offset = $this->request->get("offset", 0);
-            $limit = $this->request->get("limit", 0);
-            $total = $model
-                ->where($mimetypeQuery)
-                ->where('user_id', $this->auth->id)
-                ->order("id", "DESC")
-                ->count();
-
-            $list = $model
-                ->where($mimetypeQuery)
-                ->where('user_id', $this->auth->id)
-                ->order("id", "DESC")
-                ->limit($offset, $limit)
-                ->select();
-            $cdnurl = preg_replace("/\/(\w+)\.php$/i", '', $this->request->root());
-            foreach ($list as $k => &$v) {
-                $v['fullurl'] = ($v['storage'] == 'local' ? $cdnurl : $this->view->config['upload']['cdnurl']) . $v['url'];
-            }
-            unset($v);
-            $result = array("total" => $total, "rows" => $list);
-
-            return json($result);
-        }
-        $this->view->assign("mimetypeList", \app\common\model\Attachment::getMimetypeList());
-        return $this->view->fetch();
-    }
 }

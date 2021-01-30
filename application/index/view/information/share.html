@@ -1,0 +1,136 @@
+<style>
+    .profile-avatar-container {
+        position:relative;
+        width:100px;
+    }
+    .profile-avatar-container .profile-user-img{
+        width:100px;
+        height:100px;
+    }
+    .profile-avatar-container .profile-avatar-text {
+        display:none;
+    }
+    .profile-avatar-container:hover .profile-avatar-text {
+        display:block;
+        position:absolute;
+        height:100px;
+        width:100px;
+        background:#444;
+        opacity: .6;
+        color: #fff;
+        top:0;
+        left:0;
+        line-height: 100px;
+        text-align: center;
+    }
+    .profile-avatar-container button{
+        position:absolute;
+        top:0;left:0;width:100px;height:100px;opacity: 0;
+    }
+</style>
+<div id="content-container" class="container">
+    <div class="row">
+        <div class="col-md-3">
+            {include file="common/sidenav" /}
+        </div>
+        <div class="col-md-9">
+            <div class="panel panel-default">
+                <div class="panel-body">
+                    <h2 class="page-header">发布VIP资料</h2>
+                    <form id="profile-form" class="form-horizontal" role="form" data-toggle="validator" method="POST" action="{:url('index/information/share')}">
+                        {:token()}
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">分类<span style="color: red;">*</span>：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <select name="type" class="form-control">
+                                    {volist name="typedata" id="v"}
+                                        <option value="{$v.id}">{$v.name}</option>
+                                    {/volist}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">标题<span style="color: red;">*</span>：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="title" name="title" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">价格：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="price" name="price" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">内容<span style="color: red;">*</span>：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <textarea class="form-control editor" rows="5"  id="content"   name="content" placeholder="请输入内容">
+
+                                </textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">微信：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="wechat" name="wechat" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">QQ：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="qq" name="qq" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">手机号：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="phone" name="photo" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-xs-12 col-sm-2">邮箱：</label>
+                            <div class="col-xs-12 col-sm-4">
+                                <input type="text" class="form-control" id="email" name="email" value=""   placeholder="">
+                            </div>
+                        </div>
+                        <div class="form-group normal-footer">
+                            <label class="control-label col-xs-12 col-sm-2"></label>
+                            <div class="col-xs-12 col-sm-8">
+                                <button type="submit" class="btn btn-success btn-embossed disabled">{:__('Ok')}</button>
+                                <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-layer {height:100%;min-height:150px;min-width:300px;}
+    .form-body {
+        width:100%;
+        overflow:auto;
+        top:0;
+        position:absolute;
+        z-index:10;
+        bottom:50px;
+        padding:15px;
+    }
+    .form-layer .form-footer {
+        height:50px;
+        line-height:50px;
+        background-color: #ecf0f1;
+        width:100%;
+        position:absolute;
+        z-index:200;
+        bottom:0;
+        margin:0;
+    }
+    .form-footer .form-group{
+        margin-left:0;
+        margin-right:0;
+    }
+</style>

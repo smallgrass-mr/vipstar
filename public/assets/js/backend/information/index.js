@@ -38,6 +38,10 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form'], function ($, undefin
                         {field: 'selectverify', title: __('Selectverify')},
                         {field: 'switch', title: __('Switch'), searchList: {"0":__('Switch 0'),"1":__('Switch 1')}, table: table, formatter: Table.api.formatter.toggle},
                         {field: 'sort', title: __('Sort')},
+                        {field: 'wechat', title: __('Wechat'), operate: 'LIKE'},
+                        {field: 'qq', title: __('Qq'), operate: 'LIKE'},
+                        {field: 'phone', title: __('Phone'), operate: 'LIKE'},
+                        {field: 'email', title: __('Email'), operate: 'LIKE'},
                         {field: 'update_time', title: __('Update_time'), operate:'RANGE', addclass:'datetimerange', autocomplete:false},
                         {field: 'create_time', title: __('Create_time'), operate:'RANGE', addclass:'datetimerange', autocomplete:false},
                         {field: 'operate', title: __('Operate'), table: table, events: Table.api.events.operate, formatter: Table.api.formatter.operate}
